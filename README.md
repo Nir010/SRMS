@@ -50,5 +50,5 @@ CREATE DATABASE erecordbook;
 
 2. Update database credentials in `src/main/resources/application.properties`:
 ```properties
-spring.datasource.username=your_mysql_username
-spring.datasource.password=your_mysql_password
+spring.datasource.username=root
+spring.datasource.password=root

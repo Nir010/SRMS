@@ -17,7 +17,7 @@ public class StudentService {
         return studentRepository.findAll();
     }
     
-    public Optional<Student> getStudentById(Long id) {
+    public Optional<Student> getStudentById(Integer id) {
         return studentRepository.findById(id);
     }
     
@@ -25,7 +25,7 @@ public class StudentService {
         return studentRepository.save(student);
     }
     
-    public Student updateStudent(Long id, Student studentDetails) {
+    public Student updateStudent(Integer id, Student studentDetails) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         
@@ -43,7 +43,7 @@ public class StudentService {
         return studentRepository.save(student);
     }
     
-    public void deleteStudent(Long id) {
+    public void deleteStudent(Integer id) {
         studentRepository.deleteById(id);
     }
     

@@ -37,7 +37,7 @@ public class StudentController {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
         
-        return studentService.getStudentById(id)
+        return studentService.getStudentById(id.intValue())
                 .map(student -> ResponseEntity.ok(student))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -59,7 +59,7 @@ public class StudentController {
         }
         
         try {
-            Student updatedStudent = studentService.updateStudent(id, student);
+            Student updatedStudent = studentService.updateStudent(id.intValue(), student);
             return ResponseEntity.ok(updatedStudent);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -67,7 +67,7 @@ public class StudentController {
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteStudent(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<?> deleteStudent(@PathVariable Integer id, HttpSession session) {
         if (!isAuthenticated(session)) {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }

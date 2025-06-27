@@ -4,28 +4,28 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "students")
+@Table(name = "student")
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long studentId;
+    private int studentId;
     
-    @Column(nullable = false)
+    @Column(name = "fullName")
     private String name;
     
-    @Column(name = "date_of_birth")
+    @Column(name = "dob")
     private LocalDate dateOfBirth;
     
-    @Column(name = "temporary_address")
+    @Column(name = "temp_address")
     private String temporaryAddress;
     
-    @Column(name = "permanent_address")
+    @Column(name = "perm_address")
     private String permanentAddress;
     
-    @Column(name = "parents_name")
+    @Column(name = "parent_name")
     private String parentsName;
     
-    @Column(name = "contact_number")
+    @Column(name = "contact")
     private String contactNumber;
     
     private String email;
@@ -39,8 +39,8 @@ public class Student {
     public Student() {}
     
     // Getters and Setters
-    public Long getStudentId() { return studentId; }
-    public void setStudentId(Long studentId) { this.studentId = studentId; }
+    public int getStudentId() { return studentId; }
+    public void setStudentId(int studentId) { this.studentId = studentId; }
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

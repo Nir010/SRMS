@@ -4,17 +4,17 @@ CREATE DATABASE IF NOT EXISTS erecordbook;
 -- Use the database
 USE erecordbook;
 
--- Create admins table
-CREATE TABLE IF NOT EXISTS admins (
-    admin_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+-- Create admin's table
+CREATE TABLE IF NOT EXISTS admin (
+    admin_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create students table
-CREATE TABLE IF NOT EXISTS students (
-    student_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+-- Create student's table
+CREATE TABLE IF NOT EXISTS student (
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     date_of_birth DATE,
     temporary_address VARCHAR(255),

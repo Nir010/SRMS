@@ -3,11 +3,11 @@ package com.erecordbook.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "admins")
+@Table(name = "admin")
 public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long adminId;
+    private int adminId;
     
     @Column(unique = true, nullable = false)
     private String username;
@@ -24,8 +24,8 @@ public class Admin {
     }
     
     // Getters and Setters
-    public Long getAdminId() { return adminId; }
-    public void setAdminId(Long adminId) { this.adminId = adminId; }
+    public int getAdminId() { return adminId; }
+    public void setAdminId(int adminId) { this.adminId = adminId; }
     
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
