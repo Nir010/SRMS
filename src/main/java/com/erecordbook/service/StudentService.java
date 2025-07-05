@@ -39,6 +39,7 @@ public class StudentService {
         student.setFaculty(studentDetails.getFaculty());
         student.setSemester(studentDetails.getSemester());
         student.setEnrolledCourses(studentDetails.getEnrolledCourses());
+        student.setPhoto(studentDetails.getPhoto()); // Add this line
         
         return studentRepository.save(student);
     }

@@ -8,4 +8,5 @@ public class ERecordBookApplication {
     public static void main(String[] args) {
         SpringApplication.run(ERecordBookApplication.class, args);
     }
+    
 }

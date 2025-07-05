@@ -13,15 +13,10 @@ function showRegisterForm() {
     document.getElementById('registerError').textContent = '';
 }
 
-// --- FIX: Only show one section at a time ---
 function showSection(sectionId) {
-    // Hide all content sections
     document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-    // Show the selected section
     const section = document.getElementById(sectionId);
     if (section) section.classList.add('active');
-
-    // Highlight the active nav-link
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
@@ -31,113 +26,111 @@ function showSection(sectionId) {
     });
 }
 
-
-// --- Authentication (Simple Local Storage Demo) ---
-let users = JSON.parse(localStorage.getItem('users') || '[]');
-let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-
-function updateWelcomeUser() {
+function updateWelcomeUser(username) {
     const welcomeUser = document.getElementById('welcomeUser');
-    if (currentUser && welcomeUser) {
-        welcomeUser.innerHTML = `Welcome, <span class="value">${currentUser.username}</span>`;
+    if (username && welcomeUser) {
+        welcomeUser.innerHTML = `Welcome, <span class="value">${username}</span>`;
     }
 }
 
-// Login
-document.getElementById('loginForm').onsubmit = function(e) {
+// --- Authentication ---
+document.getElementById('loginForm').onsubmit = async function(e) {
     e.preventDefault();
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
     const loginError = document.getElementById('loginError');
-    const user = users.find(u => u.username === username);
-    if (!user) {
-        loginError.textContent = "User does not exist.";
-    } else if (user.password !== password) {
-        loginError.textContent = "Invalid Password.";
-    } else {
-        loginError.textContent = "";
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        document.getElementById('loginPage').classList.remove('active');
-        document.getElementById('dashboardPage').classList.add('active');
-        updateWelcomeUser();
-        loadStudents();
-        showSection('dashboard');
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('dashboardPage').classList.add('active');
+            updateWelcomeUser(data.username);
+            loadStudents();
+            showSection('dashboard');
+        } else {
+            loginError.textContent = data.error || "Login failed.";
+        }
+    } catch (err) {
+        loginError.textContent = "Network error.";
     }
 };
 
-
-// Register
-document.getElementById('registerForm').onsubmit = function(e) {
+document.getElementById('registerForm').onsubmit = async function(e) {
     e.preventDefault();
     const username = document.getElementById('registerUsername').value.trim();
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const registerError = document.getElementById('registerError');
-    if (users.find(u => u.username === username)) {
-        registerError.textContent = "User already exists.";
-        return;
-    }
     if (password !== confirmPassword) {
         registerError.textContent = "Passwords did not match.";
         return;
     }
-    
-    users.push({ username, password });
-    localStorage.setItem('users', JSON.stringify(users));
-    registerError.textContent = "";
-    document.getElementById('authMessage').textContent = "Registration successful! Please login.";
-
-    // Clear the form fields
-    document.getElementById('registerForm').reset();
-
-    showLoginForm();
-
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+        });
+        const data = await res.json();
+        if (res.ok) {
+            registerError.textContent = "";
+            document.getElementById('authMessage').textContent = "Registration successful! Please login.";
+            document.getElementById('registerForm').reset();
+            showLoginForm();
+        } else {
+            registerError.textContent = data.error || "Registration failed.";
+        }
+    } catch (err) {
+        registerError.textContent = "Network error.";
+    }
 };
 
-
-// Logout
 function logout() {
-    localStorage.removeItem('currentUser');
-    currentUser = null;
+    fetch('/api/auth/logout', {method: 'POST'});
     document.getElementById('dashboardPage').classList.remove('active');
     document.getElementById('loginPage').classList.add('active');
 }
 
 // --- Student Data Management ---
-let students = JSON.parse(localStorage.getItem('students') || '[]');
-
-function saveStudents() {
-    localStorage.setItem('students', JSON.stringify(students));
-}
-
-function loadStudents() {
+async function loadStudents() {
     const tbody = document.getElementById('studentsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    students.forEach((student, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><img src="${student.photo}" alt="Photo" class="student-photo"></td>
-            <td>${student.id}</td>
-            <td>${student.name}</td>
-            <td>${student.email}</td>
-            <td>${student.faculty}</td>
-            <td>${student.semester}</td>
-            <td>
-                <button class="btn btn-primary" onclick="openEditModal(${idx})"><i class="fas fa-edit"></i> Edit</button>
-                <button class="btn btn-secondary" onclick="deleteStudent(${idx})"><i class="fas fa-trash"></i> Delete</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-    if (document.getElementById('totalStudents'))
-        document.getElementById('totalStudents').textContent = students.length;
-    if (document.getElementById('activeFaculties'))
-        document.getElementById('activeFaculties').textContent = new Set(students.map(s => s.faculty)).size;
+    try {
+        const res = await fetch('/api/students');
+        if (!res.ok) throw new Error();
+        const students = await res.json();
+        students.forEach((student, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><img src="${student.photo || ''}" alt="Photo" class="student-photo"></td>
+                <td>${student.studentId}</td>
+                <td>${student.name}</td>
+                <td>${student.email}</td>
+                <td>${student.faculty}</td>
+                <td>${student.semester}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="openEditModal(${student.studentId})"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-secondary" onclick="deleteStudent(${student.studentId})"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        if (document.getElementById('totalStudents'))
+            document.getElementById('totalStudents').textContent = students.length;
+        if (document.getElementById('activeFaculties'))
+            document.getElementById('activeFaculties').textContent = new Set(students.map(s => s.faculty)).size;
+    } catch {
+        tbody.innerHTML = '<tr><td colspan="7">Failed to load students.</td></tr>';
+    }
 }
 
-// --- Photo Preview
+// --- Photo Preview ---
 document.addEventListener('DOMContentLoaded', function() {
     const photoInput = document.getElementById('studentPhoto');
     const preview = document.getElementById('photoPreview');
@@ -159,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// --- Course Selection 
+// --- Course Selection ---
 function updateSelectedCourses() {
     const checked = [];
     document.querySelectorAll('#coursesDropdown input[type="checkbox"]:checked').forEach(cb => {
@@ -173,14 +166,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// --- Add Student: 
+// --- Add Student ---
 window.validateForm = function() {
     const photoInput = document.getElementById('studentPhoto');
     const photoFile = photoInput.files[0];
-    if (!photoFile || !/\.(jpe?g|png)$/i.test(photoFile.name)) {
-        document.getElementById('studentMessage').textContent = "Please select a valid photo (jpg, jpeg, png).";
-        return false;
-    }
     const name = document.getElementById('studentName').value.trim();
     const dob = document.getElementById('dob').value;
     const temp_address = document.getElementById('temp_address').value.trim();
@@ -191,129 +180,194 @@ window.validateForm = function() {
     const faculty = document.getElementById('faculty').value;
     const semester = document.getElementById('semester').value;
     const courses = Array.from(document.querySelectorAll('#coursesDropdown input[type="checkbox"]:checked')).map(cb => cb.value);
-    if (!name || !dob || !temp_address || !perm_address || !parent_name || !contact || !email || !faculty || !semester || courses.length === 0) {
-        document.getElementById('studentMessage').textContent = "Please fill all fields and select at least one course.";
+
+    if (!name || !dob || !temp_address || !perm_address || !parent_name || !contact || !email || !faculty || !semester) {
+        document.getElementById('studentMessage').textContent = "All fields are required.";
         return false;
     }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        document.getElementById('studentMessage').textContent = "Please enter a valid email address.";
+        return false;
+    }
+    const contactPattern = /^\d{10,15}$/;
+    if (!contactPattern.test(contact)) {
+        document.getElementById('studentMessage').textContent = "Please enter a valid contact number (10-15 digits).";
+        return false;
+    }
+    if (courses.length === 0) {
+        document.getElementById('studentMessage').textContent = "Please select at least one course.";
+        return false;
+    }
+    if (!photoFile || !/\.(jpe?g|png)$/i.test(photoFile.name)) {
+        document.getElementById('studentMessage').textContent = "Please select a valid photo (jpg, jpeg, png).";
+        return false;
+    }
+
     const reader = new FileReader();
-    reader.onload = function (e) {
-        students.push({
-            name,
-            dob,
-            temp_address,
-            perm_address,
-            parent_name,
-            contact,
-            email,
-            faculty,
-            semester,
-            courses,
-            photo: e.target.result
-        });
-        saveStudents();
-        document.getElementById('studentMessage').textContent = "Student added successfully!";
-        loadStudents();
-        setTimeout(() => document.getElementById('studentMessage').textContent = "", 5000);
-        document.querySelector('#addStudent form').reset();
-        document.getElementById('selectedCourses').textContent = '';
-        document.getElementById('photoPreview').style.display = 'none';
+    reader.onload = async function (e) {
+        try {
+            const res = await fetch('/api/students', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name,
+                    dateOfBirth: dob,
+                    temporaryAddress: temp_address,
+                    permanentAddress: perm_address,
+                    parentsName: parent_name,
+                    contactNumber: contact,
+                    email,
+                    faculty,
+                    semester,
+                    enrolledCourses: courses.join(','),
+                    photo: e.target.result
+                })
+            });
+            if (res.ok) {
+                document.getElementById('studentMessage').textContent = "Student added successfully!";
+                loadStudents();
+                setTimeout(() => document.getElementById('studentMessage').textContent = "", 5000);
+                document.querySelector('#addStudent form').reset();
+                document.getElementById('selectedCourses').textContent = '';
+                document.getElementById('photoPreview').style.display = 'none';
+            } else {
+                document.getElementById('studentMessage').textContent = "Failed to add student.";
+            }
+        } catch {
+            document.getElementById('studentMessage').textContent = "Network error.";
+        }
     };
     reader.readAsDataURL(photoFile);
     return false;
 };
 
-// Delete Student
-window.deleteStudent = function (idx) {
+// --- Delete Student ---
+window.deleteStudent = async function (studentId) {
     if (confirm("Are you sure you want to delete this student?")) {
-        students.splice(idx, 1);
-        saveStudents();
-        loadStudents();
+        try {
+            const res = await fetch(`/api/students/${studentId}`, {method: 'DELETE'});
+            if (res.ok) {
+                loadStudents();
+            } else {
+                alert("Failed to delete student.");
+            }
+        } catch {
+            alert("Network error.");
+        }
     }
 };
 
 // --- Edit Modal ---
-function openEditModal(idx) {
-    const student = students[idx];
-    document.getElementById('editStudentId').value = idx;
-    document.getElementById('editStudentName').value = student.name;
-    document.getElementById('editStudentDob').value = student.dob;
-    document.getElementById('editStudentEmail').value = student.email;
-    document.getElementById('editStudentContact').value = student.contact;
-    document.getElementById('editStudentTempAddress').value = student.temp_address;
-    document.getElementById('editStudentPermAddress').value = student.perm_address;
-    document.getElementById('editStudentParents').value = student.parent_name;
-    document.getElementById('editStudentFaculty').value = student.faculty;
-    document.getElementById('editStudentSemester').value = student.semester;
-    document.getElementById('editStudentCourses').value = student.courses.join(', ');
-    document.getElementById('editModal').style.display = 'flex';
+async function openEditModal(studentId) {
+    try {
+        const res = await fetch(`/api/students/${studentId}`);
+        if (!res.ok) throw new Error();
+        const student = await res.json();
+        document.getElementById('editStudentId').value = student.studentId;
+        document.getElementById('editStudentName').value = student.name;
+        document.getElementById('editStudentDob').value = student.dateOfBirth;
+        document.getElementById('editStudentEmail').value = student.email;
+        document.getElementById('editStudentContact').value = student.contactNumber;
+        document.getElementById('editStudentTempAddress').value = student.temporaryAddress;
+        document.getElementById('editStudentPermAddress').value = student.permanentAddress;
+        document.getElementById('editStudentParents').value = student.parentsName;
+        document.getElementById('editStudentFaculty').value = student.faculty;
+        document.getElementById('editStudentSemester').value = student.semester;
+        document.getElementById('editStudentCourses').value = student.enrolledCourses;
+        document.getElementById('editModal').style.display = 'flex';
+    } catch {
+        alert("Failed to load student data.");
+    }
 }
-
 window.openEditModal = openEditModal;
 
-// Close Edit Modal
 function closeEditModal() {
     document.getElementById('editModal').style.display = 'none';
 }
 
-// Edit Student Save
-document.getElementById('editStudentForm').onsubmit = function (e) {
+// --- Edit Student Save ---
+document.getElementById('editStudentForm').onsubmit = async function (e) {
     e.preventDefault();
-    const idx = document.getElementById('editStudentId').value;
-    students[idx] = {
-        ...students[idx],
+    const studentId = document.getElementById('editStudentId').value;
+    const updatedStudent = {
         name: document.getElementById('editStudentName').value.trim(),
-        dob: document.getElementById('editStudentDob').value,
+        dateOfBirth: document.getElementById('editStudentDob').value,
         email: document.getElementById('editStudentEmail').value.trim(),
-        contact: document.getElementById('editStudentContact').value.trim(),
-        temp_address: document.getElementById('editStudentTempAddress').value.trim(),
-        perm_address: document.getElementById('editStudentPermAddress').value.trim(),
-        parent_name: document.getElementById('editStudentParents').value.trim(),
+        contactNumber: document.getElementById('editStudentContact').value.trim(),
+        temporaryAddress: document.getElementById('editStudentTempAddress').value.trim(),
+        permanentAddress: document.getElementById('editStudentPermAddress').value.trim(),
+        parentsName: document.getElementById('editStudentParents').value.trim(),
         faculty: document.getElementById('editStudentFaculty').value,
         semester: document.getElementById('editStudentSemester').value,
-        courses: document.getElementById('editStudentCourses').value.split(',').map(c => c.trim()).filter(Boolean)
+        enrolledCourses: document.getElementById('editStudentCourses').value
     };
-    saveStudents();
-    loadStudents();
-    openEditModal();
+    try {
+        const res = await fetch(`/api/students/${studentId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(updatedStudent)
+        });
+        if (res.ok) {
+            loadStudents();
+            closeEditModal();
+            const msgDiv = document.getElementById('studentMessage');
+            msgDiv.textContent = "Student details updated successfully!";
+            msgDiv.style.color = "#28a745";
+            setTimeout(() => {
+                msgDiv.textContent = "";
+                msgDiv.style.color = "";
+            }, 4000);
+        } else {
+            alert("Failed to update student.");
+        }
+    } catch {
+        alert("Network error.");
+    }
 };
 
 // --- Search ---
-window.searchStudents = function () {
-    const query = document.getElementById('searchInput').value.trim().toLowerCase();
-    const results = students.filter(s =>
-        s.id.toString().includes(query) ||
-        s.name.toLowerCase().includes(query) ||
-        s.email.toLowerCase().includes(query) ||
-        s.faculty.toLowerCase().includes(query)
-    );
+window.searchStudents = async function () {
+    const query = document.getElementById('searchInput').value.trim();
     const container = document.getElementById('searchResults');
-    if (results.length === 0) {
-        container.innerHTML = "<p>No students found.</p>";
+    if (!query) {
+        container.innerHTML = '<p style="color: #fda085;">Please enter a search term.</p>';
         return;
     }
-    container.innerHTML = `
-    <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Photo</th><th>ID</th><th>Name</th><th>Email</th><th>Faculty</th><th>Semester</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${results.map(s => `
+    try {
+        const res = await fetch(`/api/students/search?q=${encodeURIComponent(query)}`);
+        if (!res.ok) throw new Error();
+        const results = await res.json();
+        if (results.length === 0) {
+            container.innerHTML = "<p style='color: #fda085;'>Student not found.</p>";
+            return;
+        }
+        container.innerHTML = `
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td><img src="${s.photo}" alt="Photo" class="student-photo"></td>
-                        <td>${s.id}</td>
-                        <td>${s.name}</td>
-                        <td>${s.email}</td>
-                        <td>${s.faculty}</td>
-                        <td>${s.semester}</td>
+                        <th>Photo</th><th>ID</th><th>Name</th><th>Email</th><th>Faculty</th><th>Semester</th>
                     </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    </div>
-`;
+                </thead>
+                <tbody>
+                    ${results.map(s => `
+                        <tr>
+                            <td><img src="${s.photo || ''}" alt="Photo" class="student-photo"></td>
+                            <td>${s.studentId}</td>
+                            <td>${s.name}</td>
+                            <td>${s.email}</td>
+                            <td>${s.faculty}</td>
+                            <td>${s.semester}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        `;
+    } catch {
+        container.innerHTML = "<p style='color: #fda085;'>Failed to search students.</p>";
+    }
 };
 
 // --- Modal Close on Outside Click ---
@@ -325,15 +379,21 @@ window.onclick = function (event) {
 };
 
 // --- On Load: Show dashboard if logged in ---
-window.addEventListener('DOMContentLoaded', function () {
-    if (currentUser) {
-        document.getElementById('loginPage').classList.remove('active');
-        document.getElementById('dashboardPage').classList.add('active');
-        updateWelcomeUser();
-        loadStudents();
-        showSection('dashboard'); // Only dashboard is visible
-    } else {
-        // Show login page only
+window.addEventListener('DOMContentLoaded', async function () {
+    try {
+        const res = await fetch('/api/auth/check');
+        const data = await res.json();
+        if (data.authenticated) {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('dashboardPage').classList.add('active');
+            updateWelcomeUser(data.username);
+            loadStudents();
+            showSection('dashboard');
+        } else {
+            document.getElementById('loginPage').classList.add('active');
+            document.getElementById('dashboardPage').classList.remove('active');
+        }
+    } catch {
         document.getElementById('loginPage').classList.add('active');
         document.getElementById('dashboardPage').classList.remove('active');
     }
@@ -349,7 +409,6 @@ function toggleCoursesDropdown() {
     }
 }
 
-// Optional: Close dropdown if clicked outside
 document.addEventListener('click', function(event) {
     const btn = document.getElementById('enrolledCoursesBtn');
     const dropdown = document.getElementById('coursesDropdown');
