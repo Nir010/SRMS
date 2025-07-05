@@ -7,9 +7,9 @@
 }
 
 body {
-    background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+    background: linear-gradient(120deg, #e3eafc 0%, #c1d3fe 100%);
     min-height: 100vh;
-    color: #222;
+
 }
 
 a {
@@ -134,8 +134,7 @@ h1, h2, h3 {
     padding: 0.7rem 1.5rem;
     border: none;
     border-radius: 1.2rem;
-    background: linear-gradient(90deg, #f6d365 0%, #fda085 100%);
-    color: #fff;
+    background: linear-gradient(90deg, #4623e0 0%, #fda085 100%);
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
@@ -148,23 +147,21 @@ h1, h2, h3 {
 }
 
 .btn-primary {
-    background: linear-gradient(90deg, #fda085 0%, #f6d365 100%);
+    background: linear-gradient(90deg, #4623e0 0%, #fda085 100%);
 }
 
 .btn-secondary {
-    background: #eee;
-    color: #fda085;
-    border: 1px solid #fda085;
+    border: 1px solid #3a5ba0;
 }
 
 .btn:hover, .btn:focus {
-    box-shadow: 0 4px 16px rgba(253,160,133,0.18);
+    box-shadow: 0 4px 16px rgba(106, 160, 253, 0.18);
     filter: brightness(1.05);
 }
 
 #enrolledCoursesBtn {
-    background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%);
-    color: #2d3a4b;
+    background: linear-gradient(90deg, #0a7191 0%, #0c3266 100%);
+    color: white;
     border: solid black 1px;
     border-radius: 22px;
     padding: 10px 28px;
@@ -178,7 +175,7 @@ h1, h2, h3 {
 }
 #enrolledCoursesBtn:hover, #enrolledCoursesBtn:focus {
     background: linear-gradient(90deg, #43b657 0%, #afb143 100%);
-    color: #2c0ac5;
+    color: black;
     box-shadow: 0 4px 16px rgba(44, 62, 80, 0.13);
 }
 
@@ -189,21 +186,21 @@ h1, h2, h3 {
 
 /* Navbar */
 .navbar {
-    background: #fff;
+    background: #e3eafc;
+    box-shadow: 0 2px 12px rgba(44, 62, 80, 0.07);
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 12px rgba(253,160,133,0.07);
     border-radius: 0 0 1.5rem 1.5rem;
 }
 
 .nav-brand {
     display: flex;
     align-items: center;
-    font-size: 1.9rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    color: #fda085;
+    color: #6c0bda;
     gap: 0.7rem;
 }
 
@@ -225,6 +222,7 @@ h1, h2, h3 {
     min-height: 80vh;
     margin: 2rem 0;
     gap: 2rem;
+    background: #f5f8fd;
 }
 
 .sidebar {
@@ -253,7 +251,7 @@ h1, h2, h3 {
 }
 
 .nav-link.active, .nav-link:hover {
-    background: linear-gradient(90deg, #fda085 0%, #f6d365 100%);
+    background: linear-gradient(90deg, #732ee2 0%, #3184bb 100%);
     color: #fff;
 }
 
@@ -285,7 +283,7 @@ h1, h2, h3 {
 
 .section-header h2 {
     font-size: 1.5rem;
-    color: #fda085;
+    color: #3a5ba0;
     display: flex;
     align-items: center;
     gap: 0.7rem;
@@ -303,9 +301,10 @@ h1, h2, h3 {
 }
 .stat-card {
     flex: 1;
-    background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+    background: linear-gradient(120deg, #2a0869 0%, #1b92e0 100%);
     border-radius: 1.2rem;
     padding: 2rem 1.5rem;
+    color: white;
     display: flex;
     align-items: center;
     gap: 1.2rem;
@@ -379,7 +378,7 @@ h1, h2, h3 {
 
 /* Add Student Form */
 form {
-    background: radial-gradient(circle at 50% 50%, #fda085 0%, #f6d365 100%);
+    background: radial-gradient(circle at 50% 50%, #548cc0 0%, #5993df 100%);
     border-radius: 1.2rem;
     box-shadow: 0 2px 12px rgba(253,160,133,0.07);
     padding: 2rem 1.5rem;
@@ -389,7 +388,6 @@ form {
 
 form label {
     font-weight: 500;
-    color: #8d85fd;
     margin-bottom: 0.2rem;
     display: block;
 }
@@ -467,7 +465,7 @@ form input:focus, form select:focus {
     flex: 1;
     padding: 0.7rem 1rem;
     border-radius: 0.7rem;
-    border: 1px solid #f6d365;
+    border: 1px solid blue;
     background: #f9f9f9;
     font-size: 1rem;
     color: #333;

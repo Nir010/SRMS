@@ -53,7 +53,12 @@ document.getElementById('loginForm').onsubmit = async function(e) {
             loadStudents();
             showSection('dashboard');
         } else {
-            loginError.textContent = data.error || "Login failed.";
+            // Show specific error if provided by backend
+            if (data.error) {
+                loginError.textContent = data.error;
+            } else {
+                loginError.textContent = "Login failed. Please check your username and password.";
+            }
         }
     } catch (err) {
         loginError.textContent = "Network error.";
@@ -66,6 +71,7 @@ document.getElementById('registerForm').onsubmit = async function(e) {
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const registerError = document.getElementById('registerError');
+    const authMessage = document.getElementById('authMessage');
     if (password !== confirmPassword) {
         registerError.textContent = "Passwords did not match.";
         return;
@@ -79,9 +85,12 @@ document.getElementById('registerForm').onsubmit = async function(e) {
         const data = await res.json();
         if (res.ok) {
             registerError.textContent = "";
-            document.getElementById('authMessage').textContent = "Registration successful! Please login.";
+            authMessage.textContent = "Registration successful! Please login.";
             document.getElementById('registerForm').reset();
-            showLoginForm();
+            setTimeout(() => {
+                authMessage.textContent = "";
+                showLoginForm();
+            }, 2000); 
         } else {
             registerError.textContent = data.error || "Registration failed.";
         }
@@ -190,9 +199,9 @@ window.validateForm = function() {
         document.getElementById('studentMessage').textContent = "Please enter a valid email address.";
         return false;
     }
-    const contactPattern = /^\d{10,15}$/;
+    const contactPattern = /^\d{10}$/;
     if (!contactPattern.test(contact)) {
-        document.getElementById('studentMessage').textContent = "Please enter a valid contact number (10-15 digits).";
+        document.getElementById('studentMessage').textContent = "Please enter a valid contact number (10 digits).";
         return false;
     }
     if (courses.length === 0) {
@@ -275,6 +284,16 @@ async function openEditModal(studentId) {
         document.getElementById('editStudentFaculty').value = student.faculty;
         document.getElementById('editStudentSemester').value = student.semester;
         document.getElementById('editStudentCourses').value = student.enrolledCourses;
+        // Set photo preview
+        const photoPreview = document.getElementById('editPhotoPreview');
+        if (student.photo) {
+            photoPreview.src = student.photo;
+            photoPreview.style.display = 'block';
+        } else {
+            photoPreview.style.display = 'none';
+        }
+        // Reset file input
+        document.getElementById('editStudentPhoto').value = '';
         document.getElementById('editModal').style.display = 'flex';
     } catch {
         alert("Failed to load student data.");
@@ -289,6 +308,8 @@ function closeEditModal() {
 // --- Edit Student Save ---
 document.getElementById('editStudentForm').onsubmit = async function (e) {
     e.preventDefault();
+
+    // Collect other fields...
     const studentId = document.getElementById('editStudentId').value;
     const updatedStudent = {
         name: document.getElementById('editStudentName').value.trim(),
@@ -302,28 +323,44 @@ document.getElementById('editStudentForm').onsubmit = async function (e) {
         semester: document.getElementById('editStudentSemester').value,
         enrolledCourses: document.getElementById('editStudentCourses').value
     };
-    try {
-        const res = await fetch(`/api/students/${studentId}`, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(updatedStudent)
+
+    // Handle photo
+    const photoInput = document.getElementById('editStudentPhoto');
+    let photoData = null;
+    if (photoInput.files && photoInput.files[0]) {
+        // Read file as base64
+        const file = photoInput.files[0];
+        photoData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
-        if (res.ok) {
-            loadStudents();
-            closeEditModal();
-            const msgDiv = document.getElementById('studentMessage');
-            msgDiv.textContent = "Student details updated successfully!";
-            msgDiv.style.color = "#28a745";
-            setTimeout(() => {
-                msgDiv.textContent = "";
-                msgDiv.style.color = "";
-            }, 4000);
-        } else {
-            alert("Failed to update student.");
-        }
-    } catch {
-        alert("Network error.");
     }
+
+    // Build payload
+    const payload = {
+        ...updatedStudent,
+        photo: photoData // null if not changed, base64 if new photo selected
+    };
+
+    // Send to backend (adjust URL and method as needed)
+    await fetch(`/api/students/${studentId}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+
+    // Refresh student list and close modal
+    loadStudents();
+    closeEditModal();
+    const msgDiv = document.getElementById('studentMessage');
+    msgDiv.textContent = "Student details updated successfully!";
+    msgDiv.style.color = "red";
+    setTimeout(() => {
+        msgDiv.textContent = "";
+        msgDiv.style.color = "";
+    }, 4000);
 };
 
 // --- Search ---

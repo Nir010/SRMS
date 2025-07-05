@@ -378,6 +378,15 @@
                     </div>
                 </div>
                 
+                <!-- Block for photo preview and upload -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStudentPhoto">Photo (JPG, JPEG, PNG only):</label>
+                        <input type="file" id="editStudentPhoto" accept="image/jpeg, image/jpg, image/png">
+                        <img id="editPhotoPreview" class="student-photo" style="display:none; margin-top:10px;" alt="Preview">
+                    </div>
+                </div>
+                
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Update Student
