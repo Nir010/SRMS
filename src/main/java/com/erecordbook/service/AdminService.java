@@ -12,17 +12,16 @@ public class AdminService {
     @Autowired
     private AdminRepository adminRepository;
     
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
     
-    public Admin registerAdmin(String username, String password) {
+    public Admin registerAdmin(String username, String hashedPassword) {
         if (adminRepository.existsByUsername(username)) {
             throw new RuntimeException("Username already exists");
         }
-        
         Admin admin = new Admin();
         admin.setUsername(username);
-        admin.setPassword(passwordEncoder.encode(password));
-        
+        admin.setPassword(hashedPassword); 
         return adminRepository.save(admin);
     }
     

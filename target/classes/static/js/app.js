@@ -336,15 +336,19 @@ document.getElementById('editStudentForm').onsubmit = async function (e) {
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
+    } else {
+        // No new photo selected, use the existing preview src
+        const photoPreview = document.getElementById('editPhotoPreview');
+        photoData = photoPreview.src && photoPreview.style.display !== 'none' ? photoPreview.src : null;
     }
 
     // Build payload
     const payload = {
         ...updatedStudent,
-        photo: photoData // null if not changed, base64 if new photo selected
+        photo: photoData // always send the photo, either new or existing
     };
 
-    // Send to backend (adjust URL and method as needed)
+    // Send to backend
     await fetch(`/api/students/${studentId}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
